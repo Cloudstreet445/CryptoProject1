@@ -42,7 +42,7 @@ contract kapura_coin {
     }
 
     //Will need to add a month or weekly tracking of spending coins for stocktake. 
-    constructor(string memory _name, string memory _symbol, uint32 _conversion) public
+    constructor(string memory _name, string memory _symbol, uint32 _conversion)
     {
         name = _name;
         symbol = _symbol;
