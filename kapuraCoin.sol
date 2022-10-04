@@ -12,8 +12,6 @@ pragma solidity ^0.8.17;
 
 //Version 0.1 // Barebones implementation
 
-import "./BokkyPooBahsDateTimeLibrary/BokkyPooBahsDateTimeContract.sol";
-
 contract kapura_coin {
 
     address private superAdmin;
@@ -98,7 +96,7 @@ contract kapura_coin {
 
     //Venue can pay the staff their reward 
     //Checks to see if the current address belongs to a valid venue ID 
-    function payStaff(address _venueAddress, uint32 _venueID, uint32 _staffID, uint32 pay) public 
+    function payStaff(uint32 _venueID, uint32 _staffID, uint32 pay) public 
     {
         address owner = msg.sender;
         require(_venues[_venueID].venueAddress == owner);
@@ -107,7 +105,7 @@ contract kapura_coin {
     }
 
     //Take Payment
-    function takePayment(address _venueAddress, uint32 _venueID, address _staffAddress, uint32 _staffID, uint32 payed) public returns (string memory)
+    function takePayment(uint32 _venueID, address _staffAddress, uint32 _staffID, uint32 payed) public returns (string memory)
     {
         uint32 temp;
         payed = payed*conversion;
@@ -120,6 +118,7 @@ contract kapura_coin {
                 {
                     _staff[_staffID].kapuraCoins = _staff[_staffID].kapuraCoins - temp;
                     setSpentCoins(temp);
+                    return "Success";
                 }
                 else 
                     return "Not enought Balance";
@@ -159,7 +158,7 @@ contract kapura_coin {
     //Function to check that checks if the account logged in is requesting their own data.
     //If true returns account info. Else Check if a venue is trying to pull the staff data
     //If the address is from a venue it returns staff Data
-    function getStaffData(uint32 _staffID) public view returns (Staff memory)
+    function getStaffData(uint32 _staffID) public view returns(Staff memory)
     {
         address owner = msg.sender;
         if (_staff[_staffID].staffAddress == owner)
@@ -175,6 +174,7 @@ contract kapura_coin {
                 }
             }
         }
+        return _staff[0];
     }
 
     function updateTimeStamp() public {
