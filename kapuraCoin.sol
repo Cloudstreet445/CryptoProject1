@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Weltec
+
 pragma solidity ^0.8.17;
 
 //First Smart Contract written by myself for uni assignment. 
@@ -10,6 +12,8 @@ pragma solidity ^0.8.17;
 
 //Version 0.1 // Barebones implementation
 
+import "./BokkyPooBahsDateTimeLibrary/BokkyPooBahsDateTimeContract.sol";
+
 contract kapura_coin {
 
     address private superAdmin;
@@ -21,6 +25,10 @@ contract kapura_coin {
     string public name;
     string public symbol;
     
+    //Dates are fun. Can only calculate accounting 
+    //Date and time
+    uint lastUpdated = block.timestamp;
+    uint startDate;
 
     //These coins are private and for internal use only
     //Their is no cap on the coins. Just tracking of
@@ -65,14 +73,26 @@ contract kapura_coin {
         address venueAddress;
         string venueName;
         uint32 venueID;
+        Accounting venueAccouting;
     }
+
+    struct Accounting 
+    {
+        uint week;
+        uint ammount;
+    }
+
     mapping (uint => Venues) public _venues;
 
     //Adding new Venues to the contract. 
     function addVenue(address _venueAddress, string memory _venueName) public 
     {
         require(msg.sender == superAdmin);
-        _venues[venueCount] = Venues(_venueAddress, _venueName, venueCount);
+        _venues[venueCount].venueAddress = _venueAddress;
+        _venues[venueCount].venueName = _venueName;
+        _venues[venueCount].venueID = venueCount;
+        _venues[venueCount].venueAccouting.week = 0;
+        _venues[venueCount].venueAccouting.ammount = 0;
         venueCount++;
     }
 
@@ -157,10 +177,16 @@ contract kapura_coin {
         }
     }
 
+    function updateTimeStamp() public {
+        lastUpdated = block.timestamp;
+    }
 
+    function getWeek() public {
+        
 
+    }
 
-
+   
 
 
 
