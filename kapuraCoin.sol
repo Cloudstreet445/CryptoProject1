@@ -10,16 +10,18 @@ pragma solidity ^0.8.17;
 //Venues and used as an internal currency to buy food/drink 
 //As it is not an issued tradeable token, their should be no tax obligation
 
-//Version 0.1 // Barebones implementation
+//Version 0.1.5 // Barebones implementation // Added error handling
 
 contract kapura_coin {
 
-    address private superAdmin;
+    address private contractOwner; //Genreally the Person withing the company who deploys the contract. 
     uint256 private currentCoins; //current coins in peoples address  
     uint256 private spentCoins; //total coins spent by staff
+
     uint32 public venueCount;
     uint32 public staffCount;
     uint32 public conversion;
+
     string public name;
     string public symbol;
     
@@ -56,8 +58,12 @@ contract kapura_coin {
         spentCoins = 0;
         venueCount = 0;
         staffCount = 0;
-        superAdmin = msg.sender;
-        conversion = _conversion; //How many coins = $1 local currecny 
+        contractOwner = msg.sender;
+        conversion = _conversion; //How many coins = $1 local currecny
+        //Adding a Nul blank Venue and staff at array[0] 
+        //This will be returned if function fails
+        addVenue(msg.sender, "Error");  
+        addStaff(msg.sender, 0, "Error", " ");
     } 
 
 
@@ -72,6 +78,7 @@ contract kapura_coin {
         string venueName;
         uint32 venueID;
         Accounting venueAccouting;
+       //Staff venueStaff;
     }
 
     struct Accounting 
@@ -85,7 +92,7 @@ contract kapura_coin {
     //Adding new Venues to the contract. 
     function addVenue(address _venueAddress, string memory _venueName) public 
     {
-        require(msg.sender == superAdmin);
+        require(msg.sender == contractOwner);
         _venues[venueCount].venueAddress = _venueAddress;
         _venues[venueCount].venueName = _venueName;
         _venues[venueCount].venueID = venueCount;
@@ -96,12 +103,13 @@ contract kapura_coin {
 
     //Venue can pay the staff their reward 
     //Checks to see if the current address belongs to a valid venue ID 
-    function payStaff(uint32 _venueID, uint32 _staffID, uint32 pay) public 
+    function payStaff(uint32 _venueID, uint32 _staffID, uint32 pay) public returns (string memory)
     {
         address owner = msg.sender;
         require(_venues[_venueID].venueAddress == owner);
         _staff[_staffID].kapuraCoins = _staff[_staffID].kapuraCoins + pay;
         setCurrentCoins(pay);
+        return "Success";
     }
 
     //Take Payment
@@ -176,6 +184,16 @@ contract kapura_coin {
         }
         return _staff[0];
     }
+
+
+
+
+
+
+
+
+
+
 
     function updateTimeStamp() public {
         lastUpdated = block.timestamp;
