@@ -18,17 +18,15 @@ contract kapura_coin {
     uint256 private currentCoins; //current coins in peoples address  
     uint256 private spentCoins; //total coins spent by staff
 
-    uint32 public venueCount;
-    uint32 public staffCount;
-    uint32 public conversion;
+    
+    uint32 private venueCount;
+    uint32 private staffCount;
+    uint32 private transaction;
+    uint32 private accStorage;
+    uint32 public conversion; //How many coins your want worth $1 local currecny. e.g 100/1
 
     string public name;
     string public symbol;
-    
-    //Dates are fun. Can only calculate accounting 
-    //Date and time
-    uint lastUpdated = block.timestamp;
-    uint startDate;
 
     //These coins are private and for internal use only
     //Their is no cap on the coins. Just tracking of
@@ -66,7 +64,6 @@ contract kapura_coin {
         addStaff(msg.sender, 0, "Error", " ");
     } 
 
-
     ///////////////////////////////////////////////////////////////////////
     ////Venues////
     // Venues can only be created by superAdmin (contract creator) 
@@ -77,17 +74,28 @@ contract kapura_coin {
         address venueAddress;
         string venueName;
         uint32 venueID;
-        Accounting venueAccouting;
-       //Staff venueStaff;
     }
 
-    struct Accounting 
+    struct Staff 
     {
-        uint week;
-        uint ammount;
+        address staffAddress;
+        string firstName;
+        string lastName;
+        uint32 kapuraCoins;
+        uint32 staffID;
+    }
+
+    struct Accounting //Possible Accounting method for future concideration
+    {
+        uint amount;
+        uint timeStamp;
+        address venue;
+        address staff;
     }
 
     mapping (uint => Venues) public _venues;
+    mapping (uint => Staff) public _staff;
+    mapping (uint => Accounting) private _accounting;
 
     //Adding new Venues to the contract. 
     function addVenue(address _venueAddress, string memory _venueName) public 
@@ -96,9 +104,26 @@ contract kapura_coin {
         _venues[venueCount].venueAddress = _venueAddress;
         _venues[venueCount].venueName = _venueName;
         _venues[venueCount].venueID = venueCount;
-        _venues[venueCount].venueAccouting.week = 0;
-        _venues[venueCount].venueAccouting.ammount = 0;
-        venueCount++;
+        // _venues[venueCount].venueAccouting.week = 0;
+        // _venues[venueCount].venueAccouting.ammount = 0;
+         venueCount++;
+    }
+
+    //Adding new staff to the contract // possible to add staff with current ID? 
+    function addStaff(address _staffAddress, uint _venueID, string memory _firstName, string memory _lastName) public
+    {
+        address owner = msg.sender;
+        require(_venues[_venueID].venueAddress == owner);
+        _staff[staffCount] = Staff(_staffAddress, _firstName, _lastName, 0, staffCount);
+        staffCount++;
+    }
+
+    function accountingTransfer(uint _amount, address _staffAddress) private {
+        _accounting[transaction].timeStamp = block.timestamp;
+        _accounting[transaction].amount = _amount;
+        _accounting[transaction].venue = msg.sender;
+        _accounting[transaction].staff = _staffAddress;
+        transaction++;
     }
 
     //Venue can pay the staff their reward 
@@ -109,6 +134,7 @@ contract kapura_coin {
         require(_venues[_venueID].venueAddress == owner);
         _staff[_staffID].kapuraCoins = _staff[_staffID].kapuraCoins + pay;
         setCurrentCoins(pay);
+        accountingTransfer(pay, _staff[_staffID].staffAddress);
         return "Success";
     }
 
@@ -126,41 +152,20 @@ contract kapura_coin {
                 {
                     _staff[_staffID].kapuraCoins = _staff[_staffID].kapuraCoins - temp;
                     setSpentCoins(temp);
+                    accountingTransfer(payed, _staffAddress);
                     return "Success";
                 }
                 else 
-                    return "Not enought Balance";
+                    return "Error, Insufficient balance";
             }
             else
-                return "Incorrect Address";
+                return "Error, You are not the owner of this Account";
         } 
         else
-            return "Wrong Venue Address";
+            return "Error, You are not the owner of this Venues";
         //subtract from the staff coins
         //add to spent coins
         //subtract from circulating coins
-    }
-
-
-    ////////////////////////////////////////////////////////////////////////
-    ////Staff////
-    struct Staff 
-    {
-        address staffAddress;
-        string firstName;
-        string lastName;
-        uint32 kapuraCoins;
-        uint32 staffID;
-    }
-    mapping (uint => Staff) public _staff;
-
-    //Adding new staff to the contract // possible to add staff with current ID? 
-    function addStaff(address _staffAddress, uint _venueID, string memory _firstName, string memory _lastName) public
-    {
-        address owner = msg.sender;
-        require(_venues[_venueID].venueAddress == owner);
-            _staff[staffCount] = Staff(_staffAddress, _firstName, _lastName, 0, staffCount);
-            staffCount++;
     }
 
     //Function to check that checks if the account logged in is requesting their own data.
@@ -169,8 +174,8 @@ contract kapura_coin {
     function getStaffData(uint32 _staffID) public view returns(Staff memory)
     {
         address owner = msg.sender;
-        if (_staff[_staffID].staffAddress == owner)
-            return _staff[_staffID];
+        if (_staff[_staffID].staffAddress == owner)     //We do not have a require here as it can be 
+            return _staff[_staffID];                    //Either staff or venue that looks up information
         else 
         {
             for (uint i = 0; i < venueCount; i++ )
@@ -185,29 +190,15 @@ contract kapura_coin {
         return _staff[0];
     }
 
-
-
-
-
-
-
-
-
-
-
-    function updateTimeStamp() public {
-        lastUpdated = block.timestamp;
+    function getAccountingData()public view returns (Accounting[] memory)
+    {
+        require(msg.sender == contractOwner);
+        Accounting[] memory _accounts = new Accounting[](transaction);
+        for (uint i = 0; i < transaction; i++) 
+        {
+            Accounting storage _account = _accounting[i];
+            _accounts[i] = _account;
+        }
+        return _accounts;
     }
-
-    function getWeek() public {
-        
-
-    }
-
-   
-
-
-
-
 }
-
