@@ -36,13 +36,13 @@ contract kapura_coin {
     function getCurrentCoins() public view returns (uint) {
         return currentCoins;
     }
-    function setCurrentCoins(uint newCoins) public {
+    function setCurrentCoins(uint newCoins) private {
         currentCoins = currentCoins + newCoins;
     }
     function getSpentCoins() public view returns (uint) {
         return spentCoins;
     }
-    function setSpentCoins(uint _spentCoins) public {
+    function setSpentCoins(uint _spentCoins) private {
         currentCoins = currentCoins - _spentCoins;
         spentCoins = spentCoins + _spentCoins;
     }
